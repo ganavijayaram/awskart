@@ -27,14 +27,15 @@ export class CodeStack extends cdk.Stack {
     billingMode: BillingMode.PAY_PER_REQUEST
    })
 
-   //Defining propertites for the node 
-   const NodejsFunctionProps: NodejsFunctionProps = {
+   //Defining propertites for the nodejs Lamda function
+   const nodeJsFunctionProps: NodejsFunctionProps = {
     bundling: {
       //in this function if we need extrernal libraries we say aws-sdk
       externalModules: [
         'aws-sdk'
       ]
     },
+    //TODO: give more explaination here
     environment: {
       PRIMARY_KEY: 'id',
       DYNAMO_TABLE_NAME: productTable.tableName
@@ -44,8 +45,13 @@ export class CodeStack extends cdk.Stack {
 
    //creating lambda function using the nodejs for bundling and packaging
    const productFunction = new NodejsFunction(this, 'productLambdaFunction', {
-    entry: join(__dirname, `/../src/product/index.js`)
+    entry: join(__dirname, `/../src/product/index.js`),
+    //using the properties defind above
+    ...nodeJsFunctionProps
    })
+
+   //giving permission to the lambda function to perform read and write operations on the product table
+   productTable.grantReadWriteData(productFunction)
 
   }
 }
