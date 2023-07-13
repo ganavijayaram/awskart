@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { RemovalPolicy } from 'aws-cdk-lib';
+import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 //Creating the dynamo table
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -52,6 +53,38 @@ export class CodeStack extends cdk.Stack {
 
    //giving permission to the lambda function to perform read and write operations on the product table
    productTable.grantReadWriteData(productFunction)
+
+
+   //Creating infrastructure for the API gateway for microservices
+   //root name = product
+   //GET /product
+   //POST /product
+
+   //Single product with id parameter
+   //GET /product/{id}
+   //PUT /product/{id}
+   //DELETE /product/{id}
+
+  
+   const apigw = new LambdaRestApi(this, 'productApi', {
+    restApiName: 'Product Service',
+    handler: productFunction,
+    //Tells that we need to define our own resources and methods
+    proxy: false
+   });
+
+  //creating resources and respective methods
+   const product = apigw.root.addResource('product') // /product
+   product.addMethod('GET') // GET /product
+   product.addMethod('POST') //POST /product
+
+   const singleProduct = product.addResource('{id}') // /product/{id}
+   singleProduct.addMethod('GET'); //GET /product/{id}
+   singleProduct.addMethod('DELETE'); //DELETE /product/{id}
+   singleProduct.addMethod('PUT'); //PUT /product/{id}
+
+
+
 
   }
 }
