@@ -1,16 +1,14 @@
 //Using thr EC6+
-import { DeleteItemCommand, PutItemCommand, QueryCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { get, validateHeaderValue } from "http";
-import { GetItemCommand } from ("@aws-sdk/client-dynamodb");
-import { marshall, unmarshall } from require("@aws-sdk/util-dynamodb");
-import { ddbClient } from require("./ddbClient");
+import { GetItemCommand, DeleteItemCommand, PutItemCommand, QueryCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import { ddbClient } from "./ddbClient";
 import {v4 as uuidv4} from 'uuid'
-import { threadId } from "worker_threads";
 
 exports.handler = async function(event) {
     console.log("result:", JSON.stringify(event, undefined, 2));
 
     try {
+        var body
         //Using switch to respond to various methods from the API gateway
         switch(event.httpMethod) {
             case "GET":
@@ -28,7 +26,7 @@ exports.handler = async function(event) {
                 body = await createProduct(event)
                 break;
             case "DELETE":
-                body = await deleteProduct(event) //DELETE product/1
+                body = await deleteProduct(event.pathParameters.id) //DELETE product/1
                 break
             case "PUT":
                 body = await updateProduct(event) //PUT /product/1
@@ -36,15 +34,14 @@ exports.handler = async function(event) {
             default:
                 throw new Error(`Unsupported route: "${event.httpMethod}"`)
         }
-        console.log(body)
+        //console.log(`ERROR IN THE SWITCH "$body"`)
         return {
             statusCode: 200,
-            headers: {"Content-Type": "text/plain"},
             body: JSON.stringify({
-                message: `Successfully completed "$event.httpMethod" operation`,
-                body: body
+              message: `Successfully finished operation: "${event.httpMethod}"`,
+              body: body
             })
-        }
+          };
     }
     catch (e){
         console.error(e)
@@ -58,6 +55,24 @@ exports.handler = async function(event) {
         }
     }
 }
+
+const getAllProducts = async () => {
+    console.log("getAllProducts");
+    try {
+      const params = {
+        TableName: process.env.DYNAMO_TABLE_NAME
+      };
+  
+      const { Items } = await ddbClient.send(new ScanCommand(params));
+  
+      console.log(Items);
+      return (Items) ? Items.map((item) => unmarshall(item)) : {};
+  
+    } catch(e) {
+      console.error(e);
+      throw e;
+    }
+  }
 
 const getProduct = async(productId) => {
     console.log("getProduct")
@@ -115,51 +130,37 @@ const createProduct = async(event) => {
     }
 }
 
-const getAllProducts =  async() => {
-    console.log("getAllProducts")
 
+
+const deleteProduct = async (productId) => {
+    console.log(`deleteProduct function. productId : "${productId}"`);
+  
     try {
-        const {Item} = await ddbClient.send(new ScanCommand())
-        return (Item) ? Item.map((item) => unmarshall(item)) : {}
+      const params = {
+        TableName: process.env.DYNAMO_TABLE_NAME,
+        Key: marshall({ id: productId }),
+      };
+  
+      const deleteResult = await ddbClient.send(new DeleteItemCommand(params));
+  
+      console.log(deleteResult);
+      return deleteResult;
+    } catch(e) {
+      console.error(e);
+      throw e;
     }
-    catch(e) {
-        console.error(e)
-        throw e
-    }
-}
-
-const deleteProduct = async(productId) => {
-    console.log(`Delete Product "$event.pathParameter.id"`)
-
-    try {
-        const params = {
-            TableName: process.env.DYNAMO_TABLE_NAME,
-            Key:  marshall({id: productId})
-        }
-        const result = await ddbClient.send(new DeleteItemCommand(params))
-
-        console.log(result)
-        return result
-
-
-    }
-    catch (e){
-        console.error(e)
-        throw (e)
-    }
-
-}
+  }
 
 const updateProduct = async(event) => {
     console.log(`Updating the product "$event.pathParameters.id"`)
 
     try {
         const productRequest = JSON.parse(event.body)
-        const objectKeys = Object.keys(productRequest)
-        console.log(`Update function requestBody "$productRequest" objectKeys "$objectKeys"` )
+        const objKeys = Object.keys(productRequest)
+        console.log(`Update function requestBody "$productRequest" objKeys "$objKeys"` )
         const params = {
             TableName: process.env.DYNAMO_TABLE_NAME,
-            Key: marshall({id: productId}),
+            Key: marshall({id: event.pathParameters.id}),
             UpdateExpression: `SET ${objKeys.map((_, index) => `#key${index} = :value${index}`).join(", ")}`,
             ExpressionAttributeNames: objKeys.reduce((acc, key, index) => ({
                 ...acc,
@@ -167,7 +168,7 @@ const updateProduct = async(event) => {
             }), {}),
             ExpressionAttributeValues: marshall(objKeys.reduce((acc, key, index) => ({
                 ...acc,
-                [`:value${index}`]: requestBody[k ey],
+                [`:value${index}`]: productRequest[key],
             }), {})),
         }
         const result = await ddbClient.send(new UpdateItemCommand(params))
@@ -195,7 +196,7 @@ const getProductsByCategory = async(event) => {
                 ":productId": { S: productId },
                 ":category": { S: category }
             },      
-            TableName: process.env.DYNAMODB_TABLE_NAME
+            TableName: process.env.DYNAMO_TABLE_NAME
             };
         
         const {Items} = await ddbClient.send(new QueryCommand(params))
