@@ -1,5 +1,5 @@
 //Using thr EC6+
-import { DeleteItemCommand, PutItemCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { DeleteItemCommand, PutItemCommand, QueryCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { get, validateHeaderValue } from "http";
 import { GetItemCommand } from ("@aws-sdk/client-dynamodb");
 import { marshall, unmarshall } from require("@aws-sdk/util-dynamodb");
@@ -151,6 +151,33 @@ v
             console.log(result)
             return result  
 
+        }
+        catch (e) {
+            console.error(e)
+            throw e;
+        }
+    }
+
+    const getProductsByCategory = async(event) => {
+        console.log(`getProductByCategory "$event"`)
+        try {
+
+            const productId = event.pathParameters.id
+            const category = event.queryStringParameters.category
+            const params = {
+                KeyConditionExpression: "id = :productId",
+                FilterExpression: "contains (category, :category)",
+                ExpressionAttributeValues: {
+                  ":productId": { S: productId },
+                  ":category": { S: category }
+                },      
+                TableName: process.env.DYNAMODB_TABLE_NAME
+              };
+          
+            const {Items} = await ddbClient.send(new QueryCommand(params))
+
+            console.log(result)
+            return (Items) ? Items.map((itme) => unmarshall(item)) : {}
         }
         catch (e) {
             console.error(e)
