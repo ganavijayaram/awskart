@@ -1,5 +1,5 @@
 //Using thr EC6+
-import { PutItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { DeleteItemCommand, PutItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { validateHeaderValue } from "http";
 import { GetItemCommand } from ("@aws-sdk/client-dynamodb");
 import { marshall, unmarshall } from require("@aws-sdk/util-dynamodb");
@@ -21,6 +21,9 @@ exports.handler = async function(event) {
         case "POST":
             body = await createProduct(event)
             break;
+        case "DELETE":
+            body = await deleteProduct(event.pathParameters.id) //DELETE product/1
+            break
         default:
             throw new Error(`Unsupported route: "${event.httpMethod}"`)
     }
@@ -79,10 +82,6 @@ v
             console.Error(e)
             throw e
         }
-
-        
-
-       
     }
 
     const getAllProducts =  async() => {
@@ -96,6 +95,27 @@ v
             console.error(e)
             throw e
         }
+    }
+
+    const deleteProduct = async(event.pathParameters.id) => {
+        console.log(`Delete Product "$event.pathParameter.id"`)
+
+        try {
+            const params = {
+                TableName: process.env.DYNAMO_TABLE_NAME,
+                Key:  marshall({id: productId})
+            }
+            const result = await ddbClient.send(new DeleteItemCommand(params))
+
+            console.log(result)
+
+
+        }
+        catch (e){
+            console.Error(e)
+            throw (e)
+        }
+
     }
 
     return {
