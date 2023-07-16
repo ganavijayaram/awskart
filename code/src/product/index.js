@@ -1,5 +1,6 @@
 //Using thr EC6+
-import { ScanCommand } from "@aws-sdk/client-dynamodb";
+import { PutItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { validateHeaderValue } from "http";
 import { GetItemCommand } from ("@aws-sdk/client-dynamodb");
 import { marshall, unmarshall } from require("@aws-sdk/util-dynamodb");
 import { ddbClient } from require("./ddbClient");
@@ -20,7 +21,7 @@ exports.handler = async function(event) {
             body = await createProduct(event)
             break;
         default:
-            throw new Error(`Unsupported route: '${event.httpMethod}`)
+            throw new Error(`Unsupported route: "${event.httpMethod}"`)
     }
 
     const getProduct = async(productId) => {
@@ -45,6 +46,38 @@ exports.handler = async function(event) {
             throw e
 v
         }
+    }
+
+    const createProduct = async(event) => {
+        console.log(`createProduct: "${event}" `)
+
+        //Currently expecting body to have the follwoing parameters
+        /*
+        {
+            id: value,
+            name: value
+        }*/
+
+        try{
+            const requestbody = JSON.parse(event.body)
+            const params = {
+                TableName:  process.env.DYNAMO_TABLE_NAME,
+                Item: marshall(requestbody || {})
+            }
+            const result = await ddbClient.send(new PutItemCommand(params))
+
+            console.log(result)
+
+            return result
+        }
+        catch (e) {
+            console.Error(e)
+            throw e
+        }
+
+        
+
+       
     }
 
     const getAllProducts =  async() => {
