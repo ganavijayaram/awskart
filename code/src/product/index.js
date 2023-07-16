@@ -15,6 +15,12 @@ exports.handler = async function(event) {
             else {
                 body = await getAllProducts(); //GET /product
             }
+            break;
+        case "POST":
+            body = await createProduct(event)
+            break;
+        default:
+            throw new Error(`Unsupported route: '${event.httpMethod}`)
     }
 
     const getProduct = async(productId) => {
