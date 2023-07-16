@@ -1,4 +1,5 @@
 //Using thr EC6+
+import { ScanCommand } from "@aws-sdk/client-dynamodb";
 import { GetItemCommand } from ("@aws-sdk/client-dynamodb");
 import { marshall, unmarshall } from require("@aws-sdk/util-dynamodb");
 import { ddbClient } from require("./ddbClient");
@@ -31,14 +32,28 @@ exports.handler = async function(event) {
             console.log(Item)
 
             //If the Item is not null, we will unmarshall it else we will send an empty json object
-            return {Item} ? unmarshall(Item) : {}
+            return (Item) ? unmarshall(Item) : {}
         }
         catch (e){
             console.error(e)
             throw e
-
+v
         }
     }
+
+    const getAllProducts =  async() => {
+        console.log("getAllProducts")
+
+        try {
+            const {Item} = await ddbClient.send(new ScanCommand())
+            return (Item) ? Item.map((item) => unmarshall(item)) : {}
+        }
+        catch(e) {
+            console.error(e)
+            throw e
+        }
+    }
+
     return {
         statusCode: 200,
         headers: {"Content-Type": "text/plain"},
