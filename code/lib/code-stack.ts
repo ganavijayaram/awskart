@@ -7,11 +7,14 @@ import { Code, Function, Runtime, RuntimeFamily } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import { join } from 'path';
+import { EcommerceDatabase } from './database';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 export class CodeStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    const database = new EcommerceDatabase(this, 'Database')
 
    //creating dynamo table
    //scope, id, properties
@@ -39,7 +42,7 @@ export class CodeStack extends cdk.Stack {
     //TODO: give more explaination here
     environment: {
       PRIMARY_KEY: 'id',
-      DYNAMO_TABLE_NAME: productTable.tableName
+      DYNAMO_TABLE_NAME: database.productTable.tableName
     },
     runtime: Runtime.NODEJS_18_X
    }
@@ -52,7 +55,7 @@ export class CodeStack extends cdk.Stack {
    })
 
    //giving permission to the lambda function to perform read and write operations on the product table
-   productTable.grantReadWriteData(productFunction)
+   database.productTable.grantReadWriteData(productFunction)
 
 
    //Creating infrastructure for the API gateway for microservices
