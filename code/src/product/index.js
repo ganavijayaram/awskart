@@ -4,6 +4,7 @@ import { validateHeaderValue } from "http";
 import { GetItemCommand } from ("@aws-sdk/client-dynamodb");
 import { marshall, unmarshall } from require("@aws-sdk/util-dynamodb");
 import { ddbClient } from require("./ddbClient");
+import {v4 as uuidv4} from 'uuid'
 
 exports.handler = async function(event) {
     console.log("result:", JSON.stringify(event, undefined, 2));
@@ -58,16 +59,20 @@ v
             name: value
         }*/
 
+    
         try{
-            const requestbody = JSON.parse(event.body)
+            const productRequest = JSON.parse(event.body)
+            //Autogenerating the id
+            const productId = uuidv4()
+            //setting the product id into the body
+            productRequest.id = productId
             const params = {
                 TableName:  process.env.DYNAMO_TABLE_NAME,
-                Item: marshall(requestbody || {})
+                Item: marshall(productRequest || {})
             }
             const result = await ddbClient.send(new PutItemCommand(params))
 
             console.log(result)
-
             return result
         }
         catch (e) {
