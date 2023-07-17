@@ -44,13 +44,13 @@ export class EcommerceDatabase extends Construct {
         //eachItem - {productId, productName, price, color, quantity}
         const basketTable = new Table(this, 'basket', {
             partitionKey: {
-                name: 'userName',
-                type: AttributeType.STRING
+              name: 'userName',
+              type: AttributeType.STRING,
             },
             tableName: 'basket',
             removalPolicy: RemovalPolicy.DESTROY,
             billingMode: BillingMode.PAY_PER_REQUEST
-        })
-        return basketTable
+          });
+          return basketTable;
     }
 }

@@ -1,4 +1,5 @@
-
+import { GetItemCommand, DeleteItemCommand, PutItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { ddbClient }  from "./ddbClient";
 
 exports.handler = async function(event) {
@@ -32,7 +33,7 @@ exports.handler = async function(event) {
                 }
                 break
             case "DELETE":  
-                body = await deleteBasket(event) //DELETE /basket/{userName}
+                body = await deleteBasket(event.pathParameters.userName) //DELETE /basket/{userName}
                 break
             default:
                 throw new Error(`Unsupported route ${event.httpMethod}`)
@@ -58,32 +59,31 @@ exports.handler = async function(event) {
 }  
 
 //This is synchronous implementation
-const getBasket = async(userName) => {
-    console.log(`getBasket "${userName}`)
-
+const getBasket = async (userName) => {
+    console.log("getBasket");
     try {
-        params = {
-            TableName: process.env.DYNAMO_TABLE_NAME,
-            Key: marshall({userName: userName})
-        }
-
-        const {item} = await ddbClient.send(new GetItemCommand(params))
-
-        console.log(item)
-        return (item)? unmarshall(Item) : {}
+        const params = {
+          TableName: process.env.DYNAMO_TABLE_NAME,
+          Key: marshall({ userName: userName })
+        };
+     
+        const { Item } = await ddbClient.send(new GetItemCommand(params));
+    
+        console.log(Item);
+        return (Item) ? unmarshall(Item) : {};
+    
+      } catch(e) {
+        console.error(e);
+        throw e;
     }
-    catch (e){
-        console.error(e)
-        throw e
-    }
-}
+  }
 
 //This is synchronous implementation
 const getAllBasket = async() => {
-    console.log("getAlBasket")
+    console.log("getAllBasket")
 
     try {
-        params =  {
+        const params =  {
             TableName: process.env.DYNAMO_TABLE_NAME
         }
 
@@ -102,7 +102,8 @@ const getAllBasket = async() => {
 //This is asynchronous implementation
 const checkoutBasket = async(event) => {
     console.log(`checkoutBasket "$event"`)
-
+    //Once we checkout the basket, the event is sent to the Event Bridge and then the order microservice will sue it
+    //this uses the concept of pub-sub model
     try {
 
     }
@@ -119,7 +120,7 @@ const createBasket = async(event) => {
 
     try {
         const requestBody = JSON.parse(event.body)
-        params = {
+        const params = {
             TableName: process.env.DYNAMO_TABLE_NAME,
             //retrieving the parameters sent by the user and using it create basket
             //This item should conatin the minimum parameter of the 'userName' as described in the 
@@ -141,8 +142,8 @@ const createBasket = async(event) => {
 }
 
 //This is synchronous implementation
-const deleteBasket = async(event) => {
-    console.log(`deleteBasket "$event"`)
+const deleteBasket = async(userName) => {
+    console.log(`deleteBasket "${userName}"`)
 
     try {
         const params = {
