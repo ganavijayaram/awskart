@@ -83,7 +83,14 @@ const getAllBasket = async() => {
     console.log("getAlBasket")
 
     try {
+        params: {
+            TableName: process.env.DYNAMO_TABLE_NAME
+        }
 
+        const {Items} =  await ddbClient.send(new ScanCommand(params))
+
+        console.log(Items)
+        return (Items)? Items.map((item) => unmarshall(item)): {}
     }
     catch (e){
         console.error(e)
