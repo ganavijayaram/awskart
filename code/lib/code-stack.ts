@@ -8,6 +8,7 @@ import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-node
 import { Construct } from 'constructs';
 import { join } from 'path';
 import { EcommerceDatabase } from './database';
+import { EcommerceMicroservices } from './microservice';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 export class CodeStack extends cdk.Stack {
@@ -15,47 +16,13 @@ export class CodeStack extends cdk.Stack {
     super(scope, id, props);
 
     const database = new EcommerceDatabase(this, 'Database')
+    const microservices = new EcommerceMicroservices(this, "Microservices", {
+      productTable: database.productTable
+    })
 
-   //creating dynamo table
-   //scope, id, properties
-   const productTable = new Table(this, 'product', {
-    //partiton key
-    partitionKey: {
-      name: 'id',
-      type: AttributeType.STRING
-    },
-    //name of the table
-    tableName: 'product',
-    //to destroy when we run cdk destroy, else even if run cdk destroy, it will not destroy if we dont mention destroy
-    removalPolicy: RemovalPolicy.DESTROY,
-    billingMode: BillingMode.PAY_PER_REQUEST
-   })
+  
 
-   //Defining propertites for the nodejs Lamda function
-   const nodeJsFunctionProps: NodejsFunctionProps = {
-    bundling: {
-      //in this function if we need extrernal libraries we say aws-sdk
-      externalModules: [
-        'aws-sdk'
-      ]
-    },
-    //TODO: give more explaination here
-    environment: {
-      PRIMARY_KEY: 'id',
-      DYNAMO_TABLE_NAME: database.productTable.tableName
-    },
-    runtime: Runtime.NODEJS_18_X
-   }
-
-   //creating lambda function using the nodejs for bundling and packaging
-   const productFunction = new NodejsFunction(this, 'productLambdaFunction', {
-    entry: join(__dirname, `/../src/product/index.js`),
-    //using the properties defind above
-    ...nodeJsFunctionProps
-   })
-
-   //giving permission to the lambda function to perform read and write operations on the product table
-   database.productTable.grantReadWriteData(productFunction)
+   
 
 
    //Creating infrastructure for the API gateway for microservices
@@ -71,7 +38,7 @@ export class CodeStack extends cdk.Stack {
   
    const apigw = new LambdaRestApi(this, 'productApi', {
     restApiName: 'Product Service',
-    handler: productFunction,
+    handler: microservices.productMicroservice,
     //Tells that we need to define our own resources and methods
     proxy: false
    });
