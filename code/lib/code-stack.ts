@@ -16,7 +16,8 @@ export class CodeStack extends cdk.Stack {
       basketTable: database.basketTable
     })
     const apigateway = new EcommerceApiGateway(this, "ApiGateway", {
-      productMicroservice: microservices.productMicroservice
+      productMicroservice: microservices.productMicroservice,
+      basketMicroservice: microservices.basketMicroservice
     })
 
   }
