@@ -11,20 +11,22 @@ export class EcommerceApiGateway extends Construct {
     constructor(scope: Construct, id: string, props: EcommerceApiGatewayProps) {
         super(scope, id)
 
-        //Creating infrastructure for the API gateway for microservices
+       this.createProductApi(props.productMicroservice)
+    }
+
+    private createProductApi(productMicroservice: IFunction){
+
+         //Creating infrastructure for the API gateway for microservices
         //root name = product
         //GET /product
         //POST /product
-
         //Single product with id parameter
         //GET /product/{id}
         //PUT /product/{id}
         //DELETE /product/{id}
-
-        
         const apigw = new LambdaRestApi(this, 'productApi', {
             restApiName: 'Product Service',
-            handler: props.productMicroservice,
+            handler: productMicroservice,
             //Tells that we need to define our own resources and methods
             proxy: false
         });
