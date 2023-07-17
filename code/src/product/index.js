@@ -48,7 +48,7 @@ exports.handler = async function(event) {
         return {
             statusCode: 500,
             body: JSON.stringify({
-                message: "Failed in the handler",
+                message: "Failed in the handler Product Microservices",
                 errorMsg: e.message,
                 errorStack: e.stack
             })
