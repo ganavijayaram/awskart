@@ -4,21 +4,25 @@ import { NodejsFunction, NodejsFunctionProps } from "aws-cdk-lib/aws-lambda-node
 import { Construct } from "constructs";
 import { join } from "path";
 
-//TODO: To Accept parameters outside the class
+//To Accept parameters outside the class, requestiong these values for creating the lambda functiosn
 interface EcommerceMicroservicesProps {
     productTable: ITable
+    basketTable: ITable
 }
 
 export class EcommerceMicroservices extends Construct {
 
     //To allow other classes to be able to access these parameters
     public readonly productMicroservice: NodejsFunction
+    public readonly basketMicroservice: NodejsFunction
+    
 
     constructor(scope: Construct, id: string, props: EcommerceMicroservicesProps) {
         super(scope, id)
 
         //Exposing the product Function to other classes
         this.productMicroservice = this.createProductMicroservices(props.productTable)
+        this.basketMicroservice = this.createBasketMicroservices(props.basketTable)
     }
 
     private createProductMicroservices(productTable: ITable): NodejsFunction {
@@ -48,6 +52,32 @@ export class EcommerceMicroservices extends Construct {
         //giving permission to the lambda function to perform read and write operations on the product table
         productTable.grantReadWriteData(productFunction)
         return productFunction
+    }
+
+    private createBasketMicroservices(basketTable: ITable): NodejsFunction {
+
+        const basketFunctionProps: NodejsFunctionProps  = {
+            bundling: {
+                externalModules: [
+                    'aws-sdk'
+                ]
+            },
+            environment: {
+                PRIMARY_KEY: 'userName',
+                DYNAMO_TABLE_NAME: basketTable.tableName
+                 
+            },
+            runtime: Runtime.NODEJS_18_X
+        }
+
+        const basketFunction = new NodejsFunction(this, 'basketLambdaFunction', {
+            entry: join(__dirname, `/../src/basket/index.js`),
+            ...basketFunctionProps
+        })
+
+        basketTable.grantReadWriteData(basketFunction)
+        return basketFunction
+
     }
 
        

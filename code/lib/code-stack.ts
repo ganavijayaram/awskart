@@ -12,7 +12,8 @@ export class CodeStack extends cdk.Stack {
     //Defining the level-2 constructs 
     const database = new EcommerceDatabase(this, 'Database')
     const microservices = new EcommerceMicroservices(this, "Microservices", {
-      productTable: database.productTable
+      productTable: database.productTable,
+      basketTable: database.basketTable
     })
     const apigateway = new EcommerceApiGateway(this, "ApiGateway", {
       productMicroservice: microservices.productMicroservice
