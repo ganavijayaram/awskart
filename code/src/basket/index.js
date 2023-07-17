@@ -145,6 +145,15 @@ const deleteBasket = async(event) => {
     console.log(`deleteBasket "$event"`)
 
     try {
+        const params = {
+            TableName: process.env.DYNAMO_TABLE_NAME,
+            Key: marshall({userName: userName})
+        }
+
+        const deleteBasketResult = await ddbClient.send(new DeleteItemCommand(params))
+
+        console.log(deleteBasketResult)
+        return deleteBasketResult
 
     }
     catch (e){
