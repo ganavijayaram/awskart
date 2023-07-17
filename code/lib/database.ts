@@ -6,12 +6,15 @@ export class EcommerceDatabase extends Construct {
 
     //Exposing the product Table to the codestack
     public readonly productTable: ITable
+    public readonly basketTable: ITable
+
 
     constructor (scope: Construct, id: string) {
         super(scope, id)
 
-        //creating dynamo table
+        //creating dynamo table for Product microservices
         //scope, id, properties
+        //name, desc, image, category, price
         const productTable = new Table(this, 'product', {
             //partiton key
             partitionKey: {
@@ -26,5 +29,19 @@ export class EcommerceDatabase extends Construct {
         })
         //setting the value of the variable which is being exposed
         this.productTable = productTable
+
+        //creating dynamodb table for basket microservices
+        //basket:  PK: username --items (SET-MAP)
+        //eachItem - {productId, productName, price, color, quantity}
+        const basketTable = new Table(this, 'basket', {
+            partitionKey: {
+                name: 'id',
+                type: AttributeType.STRING
+            },
+            tableName: 'basket',
+            removalPolicy: RemovalPolicy.DESTROY,
+            billingMode: BillingMode.PAY_PER_REQUEST
+        })
+        this.basketTable = basketTable
     }
 }
