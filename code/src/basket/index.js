@@ -83,7 +83,7 @@ const getAllBasket = async() => {
     console.log("getAlBasket")
 
     try {
-        params: {
+        params =  {
             TableName: process.env.DYNAMO_TABLE_NAME
         }
 
@@ -118,6 +118,19 @@ const createBasket = async(event) => {
     console.log(`createBasket "$event"`)
 
     try {
+        const requestBody = JSON.parse(event.body)
+        params = {
+            TableName: process.env.DYNAMO_TABLE_NAME,
+            //retrieving the parameters sent by the user and using it create basket
+            //This item should conatin the minimum parameter of the 'userName' as described in the 
+            //definition of the basketTable in the database.ts
+            Item: marshall(requestBody || {})
+        }
+
+        const createBasketResult =  await ddbClient.send(new PutItemCommand(params))
+
+        console.log(createBasketResult)
+        return createBasketResult
 
     }
     catch (e){

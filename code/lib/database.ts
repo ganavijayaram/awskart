@@ -44,7 +44,7 @@ export class EcommerceDatabase extends Construct {
         //eachItem - {productId, productName, price, color, quantity}
         const basketTable = new Table(this, 'basket', {
             partitionKey: {
-                name: 'id',
+                name: 'userName',
                 type: AttributeType.STRING
             },
             tableName: 'basket',
