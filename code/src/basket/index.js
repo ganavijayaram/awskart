@@ -53,3 +53,72 @@ exports.handler = async function(event) {
         }
     }
 }  
+
+//This is synchronous implementation
+const getBasket = async(userName) => {
+    console.log(`getBasket "${userName}`)
+
+    try {
+        
+    }
+    catch (e){
+        console.error(e)
+        throw e
+    }
+}
+
+//This is synchronous implementation
+const getAllBasket = async() => {
+    console.log("getAlBasket")
+
+    try {
+
+    }
+    catch (e){
+        console.error(e)
+        throw e
+    }
+
+}
+
+//This is asynchronous implementation
+const checkoutBasket = async(event) => {
+    console.log(`checkoutBasket "$event"`)
+
+    try {
+
+    }
+    catch (e){
+        console.error(e)
+        throw e
+    }
+
+}
+
+//This is synchronous implementation
+const createBasket = async(event) => {
+    console.log(`createBasket "$event"`)
+
+    try {
+
+    }
+    catch (e){
+        console.error(e)
+        throw e
+    }
+
+}
+
+//This is synchronous implementation
+const deleteBasket = async(event) => {
+    console.log(`deleteBasket "$event"`)
+
+    try {
+
+    }
+    catch (e){
+        console.error(e)
+        throw e
+    }
+
+}
