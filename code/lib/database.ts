@@ -4,7 +4,7 @@ import { Construct } from "constructs";
 
 export class EcommerceDatabase extends Construct {
 
-    //Exposing the product Table
+    //Exposing the product Table to the codestack
     public readonly productTable: ITable
 
     constructor (scope: Construct, id: string) {

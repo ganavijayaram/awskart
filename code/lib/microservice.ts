@@ -4,7 +4,7 @@ import { NodejsFunction, NodejsFunctionProps } from "aws-cdk-lib/aws-lambda-node
 import { Construct } from "constructs";
 import { join } from "path";
 
-//TODO: Did not understand the need of this
+//TODO: To Accept parameters outside the class
 interface EcommerceMicroservicesProps {
     productTable: ITable
 }
@@ -12,6 +12,7 @@ interface EcommerceMicroservicesProps {
 
 export class EcommerceMicroservices extends Construct {
 
+    //To allow other classes to be able to access these parameters
     public readonly productMicroservice: NodejsFunction
 
     constructor(scope: Construct, id: string, props: EcommerceMicroservicesProps) {
