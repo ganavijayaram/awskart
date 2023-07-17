@@ -1,3 +1,6 @@
+
+import { ddbClient }  from "./ddbClient";
+
 exports.handler = async function(event) {
     console.log("request:", JSON.stringify(event, undefined, 2));
     try {
@@ -59,7 +62,15 @@ const getBasket = async(userName) => {
     console.log(`getBasket "${userName}`)
 
     try {
-        
+        params = {
+            TableName: process.env.DYNAMO_TABLE_NAME,
+            Key: marshall({userName: userName})
+        }
+
+        const {item} = await ddbClient.send(new GetItemCommand(params))
+
+        console.log(item)
+        return (item)? unmarshall(Item) : {}
     }
     catch (e){
         console.error(e)
