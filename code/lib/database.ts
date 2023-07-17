@@ -12,6 +12,14 @@ export class EcommerceDatabase extends Construct {
     constructor (scope: Construct, id: string) {
         super(scope, id)
 
+        
+        //setting the value of the product variable which is being exposed
+        this.productTable = this.createProductTable()
+        //setting the value of the basket variable which is being exposed
+        this.basketTable = this.createBasketTable()
+    }
+
+    private createProductTable(): ITable {
         //creating dynamo table for Product microservices
         //scope, id, properties
         //name, desc, image, category, price
@@ -27,10 +35,11 @@ export class EcommerceDatabase extends Construct {
             removalPolicy: RemovalPolicy.DESTROY,
             billingMode: BillingMode.PAY_PER_REQUEST
         })
-        //setting the value of the variable which is being exposed
-        this.productTable = productTable
+        return productTable
+    }
 
-        //creating dynamodb table for basket microservices
+    private createBasketTable(): ITable {
+         //creating dynamodb table for basket microservices
         //basket:  PK: username --items (SET-MAP)
         //eachItem - {productId, productName, price, color, quantity}
         const basketTable = new Table(this, 'basket', {
@@ -42,6 +51,6 @@ export class EcommerceDatabase extends Construct {
             removalPolicy: RemovalPolicy.DESTROY,
             billingMode: BillingMode.PAY_PER_REQUEST
         })
-        this.basketTable = basketTable
+        return basketTable
     }
 }
