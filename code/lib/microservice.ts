@@ -6,8 +6,8 @@ import { join } from "path";
 
 //To Accept parameters outside the class, requestiong these values for creating the lambda functiosn
 interface EcommerceMicroservicesProps {
-    productTable: ITable
-    basketTable: ITable
+    productTable: ITable,
+    basketTable: ITable,
     orderTable: ITable
 }
 
@@ -99,15 +99,12 @@ export class EcommerceMicroservices extends Construct {
             runtime: Runtime.NODEJS_18_X
         }
 
-        const orderFunction = new NodejsFunction(this, 'orderLambdaFunction' {
+        const orderFunction = new NodejsFunction(this, 'orderLambdaFunction', {
             entry: join(__dirname, `/../src/ordering/index.js`),
             ...orderFunctionProps
         })
 
         orderTable.grantReadWriteData(orderFunction)
         return orderFunction
-
-    }
-
-       
+    }  
 }
