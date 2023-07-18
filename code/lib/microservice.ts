@@ -8,6 +8,7 @@ import { join } from "path";
 interface EcommerceMicroservicesProps {
     productTable: ITable
     basketTable: ITable
+    orderTable: ITable
 }
 
 export class EcommerceMicroservices extends Construct {
@@ -15,6 +16,7 @@ export class EcommerceMicroservices extends Construct {
     //To allow other classes to be able to access these parameters
     public readonly productMicroservice: NodejsFunction
     public readonly basketMicroservice: NodejsFunction
+    public readonly orderMicroservice: NodejsFunction
     
 
     constructor(scope: Construct, id: string, props: EcommerceMicroservicesProps) {
@@ -23,6 +25,7 @@ export class EcommerceMicroservices extends Construct {
         //Exposing the product Function to other classes
         this.productMicroservice = this.createProductMicroservices(props.productTable)
         this.basketMicroservice = this.createBasketMicroservices(props.basketTable)
+        this.orderMicroservice = this.createOrderMicroservice(props.orderTable)
     }
 
     private createProductMicroservices(productTable: ITable): NodejsFunction {
@@ -77,6 +80,32 @@ export class EcommerceMicroservices extends Construct {
 
         basketTable.grantReadWriteData(basketFunction)
         return basketFunction
+
+    }
+
+    private createOrderMicroservice(orderTable: ITable): NodejsFunction {
+
+        const orderFunctionProps: NodejsFunctionProps  = {
+            bundling: {
+                externalModules: [
+                    'aws-sdk'
+                ]
+            },
+            environment: {
+                PRIMARY_KEY: 'userName',
+                SORT_KEY: 'orderDate',
+                DYNAMO_TABLE_NAME: orderTable.tableName
+            },
+            runtime: Runtime.NODEJS_18_X
+        }
+
+        const orderFunction = new NodejsFunction(this, 'orderLambdaFunction' {
+            entry: join(__dirname, `/../src/ordering/index.js`),
+            ...orderFunctionProps
+        })
+
+        orderTable.grantReadWriteData(orderFunction)
+        return orderFunction
 
     }
 
