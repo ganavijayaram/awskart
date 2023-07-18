@@ -6,7 +6,8 @@ import { Agent } from "http";
 
 interface EcommerceApiGatewayProps {
     productMicroservice: IFunction,
-    basketMicroservice: IFunction
+    basketMicroservice: IFunction,
+    orderMicroservice: IFunction
 }
 
 export class EcommerceApiGateway extends Construct {
@@ -16,6 +17,7 @@ export class EcommerceApiGateway extends Construct {
         //product api gateway
         this.createProductApi(props.productMicroservice)
         this.createBasketApi(props.basketMicroservice)
+        this.createOrderApi(props.orderMicroservice)
     }
 
     private createProductApi(productMicroservice: IFunction){
@@ -83,4 +85,17 @@ export class EcommerceApiGateway extends Construct {
     //API for ordering
     //GET /order
     //GET /order/{userName} expected: /order/userName?orderDate=timestamp
+    private createOrderApi(orderMicroservice: IFunction) {
+        const apigw = new LambdaRestApi(this, 'orderApi', {
+            restApiName: 'Order Service',
+            handler: orderMicroservice,
+            proxy: false
+        })
+
+        const order = apigw.root.addResource('order')
+        order.addMethod('GET') ////GET /order
+
+        const singleOrder = order.addResource('{userName}')
+        singleOrder.addMethod('GET') //GET /order/{userName}
+    }
 }

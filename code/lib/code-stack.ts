@@ -3,8 +3,6 @@ import { Construct } from 'constructs';
 import { EcommerceDatabase } from './database';
 import { EcommerceMicroservices } from './microservice';
 import { EcommerceApiGateway } from './apigateway';
-import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
-import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { EcommerceEventbus } from './eventbus';
 
 
@@ -21,12 +19,13 @@ export class CodeStack extends cdk.Stack {
     })
     const apigateway = new EcommerceApiGateway(this, "ApiGateway", {
       productMicroservice: microservices.productMicroservice,
-      basketMicroservice: microservices.basketMicroservice
+      basketMicroservice: microservices.basketMicroservice,
+      orderMicroservice: microservices.orderMicroservice
     })
 
     const eventBus = new EcommerceEventbus(this, 'Eventbus', {
       publisherFunction: microservices.basketMicroservice,
-      targetFunction: ??
+      targetFunction: microservices.orderMicroservice
     })
 
   }
