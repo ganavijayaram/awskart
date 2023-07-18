@@ -1,0 +1,22 @@
+[
+    {
+       "Source":"com.ecommerce.basket.checkoutbasket",
+       "Detail":"{ \"userName\": \"Ganavi\", \"basket\": \"phone1\" }",
+       "Resources":[
+          "resource1",
+          "resource2"
+       ],
+       "DetailType":"CheckoutBasket",
+       "EventBusName": "EventBus"
+    },
+    {
+       "Source":"com.ecommerce.basket.checkoutbasket",
+       "Detail":"{ \"userName\": \"Ganavi\", \"basket\": \"phone2\" }",
+       "Resources":[
+          "resource1",
+          "resource2"
+       ],
+       "DetailType":"CheckoutBasket",
+       "EventBusName": "EventBus"
+    }
+ ]
