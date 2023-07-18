@@ -7,6 +7,7 @@ export class EcommerceDatabase extends Construct {
     //Exposing the product Table to the codestack
     public readonly productTable: ITable
     public readonly basketTable: ITable
+    public readonly orderTable: ITable
 
 
     constructor (scope: Construct, id: string) {
@@ -17,6 +18,8 @@ export class EcommerceDatabase extends Construct {
         this.productTable = this.createProductTable()
         //setting the value of the basket variable which is being exposed
         this.basketTable = this.createBasketTable()
+        //setting the value of the order variable which is being exposed
+        this.orderTable = this.createOrderTable()
     }
 
     private createProductTable(): ITable {
@@ -56,4 +59,21 @@ export class EcommerceDatabase extends Construct {
 
     //Creating table for order microservice
     //PK: userName SK: OrderDate totalPrice, firstName, lastName, email, address, paymentMethod, cardInfo
+    private createOrderTable(): ITable {
+        const orderTable = new Table(this, 'order', {
+            partitionKey: {
+                name: 'userName',
+                type: AttributeType.STRING,
+            },
+            //we will have multiple orders underusername so we need to have sort key
+            sortKey: {
+                name: 'orderDate',
+                type: AttributeType.STRING
+            },
+            tableName: 'order',
+            removalPolicy: RemovalPolicy.DESTROY,
+            billingMode: BillingMode.PAY_PER_REQUEST
+        })
+        return orderTable
+    }
 }
