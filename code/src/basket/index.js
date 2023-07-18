@@ -1,6 +1,8 @@
 import { GetItemCommand, DeleteItemCommand, PutItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { PutEventsCommand } from "@aws-sdk/client-eventbridge";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { ddbClient }  from "./ddbClient";
+import { ebClient } from "./eventBridgeClient";
 
 exports.handler = async function(event) {
     console.log("request:", JSON.stringify(event, undefined, 2));
@@ -104,6 +106,28 @@ const checkoutBasket = async(event) => {
     console.log(`checkoutBasket "$event"`)
     //Once we checkout the basket, the event is sent to the Event Bridge and then the order microservice will sue it
     //this uses the concept of pub-sub model
+
+    //expected payload: {userName: xyz, attributes[firstname, lastName]}
+    //Extracting the payload
+    const eventBody = JSON.parse(event.body)
+
+    if(eventBody == null || eventBody.userName == null) {
+        throw new Error('userName not present in the event "${eventbody}"')
+    }
+
+    //get items from the basket for that user
+    const userBasket = getBasket(eventBody.userName)
+
+    //create even with this items and calculate the totalprice
+    const eventPayload = preparePayload(eventBody, userBasket)
+   
+
+    //publish event to the event bridge
+    const publishedEvent = await publishCheckoutBasketEvent(eventPayload)
+
+    //remove the existing basket
+    await deleteBasket(eventBody.userName)
+    
     try {
 
     }
@@ -112,6 +136,59 @@ const checkoutBasket = async(event) => {
         throw e
     }
 
+}
+
+const preparePayload = (eventBody, userBasket) => {
+    console.log("preparePayload")
+    try {
+        //Items should be present in the userBasket
+        if(userBasket == null || userBasket.items == null) {
+            throw new Error(`Basket has ot contain items "${userBasket}"`)
+        }
+        let totalAmount = 0
+        userBasket.items.array.forEach(item => totalAmount = totalAmount + item.price);
+        eventBody.totalAmount = totalAmount
+        console.log(`eventBody after Amount is "${eventBody}"`)
+
+        //Copying items from userBasket to the eventBody
+        Object.assign(eventBody, userBasket)
+        console.log(`Successfully prepared the payload "${eventBody}"`)
+        return eventBody
+
+    }
+    catch (e) {
+        console.error(e)
+        throw e
+    }
+}
+
+const publishCheckoutBasketEvent = async (eventPayload) => {
+    console.log("publishCheckoutBasketEvent")
+
+    try {
+        const params = {
+            Entries: [
+                {
+                    Source: process.env.EVENT_SOURCE,
+                    Detail: JSON.stringify(eventPayload),
+                    DetailType: process.env.EVENT_DETAIL_TYPE,
+                    Resources: [],
+                    EventBusName: process.env.EVENT_BUS_NAME
+                },
+            ],
+        }
+
+        //Publishing event to the Event bridge
+        const checkOutResult = await ebClient.send(new PutEventsCommand(params))
+
+        console.log(`Successfully send the event "$"data"`)
+        return checkOutResult
+
+    }
+    catch (e) {
+        console.error(e)
+        throw e
+    }
 }
 
 //This is synchronous implementation
