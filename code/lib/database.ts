@@ -53,4 +53,7 @@ export class EcommerceDatabase extends Construct {
           });
           return basketTable;
     }
+
+    //Creating table for order microservice
+    //PK: userName SK: OrderDate totalPrice, firstName, lastName, email, address, paymentMethod, cardInfo
 }

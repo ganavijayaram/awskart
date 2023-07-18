@@ -79,4 +79,8 @@ export class EcommerceApiGateway extends Construct {
 
 
     }
+
+    //API for ordering
+    //GET /order
+    //GET /order/{userName} expected: /order/userName?orderDate=timestamp
 }
