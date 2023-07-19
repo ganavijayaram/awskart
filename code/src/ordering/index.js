@@ -1,5 +1,5 @@
-import { PutItemCommand} from "@aws-sdk/client-dynamodb";
-import { marshall } from "@aws-sdk/util-dynamodb";
+import { PutItemCommand, QueryCommand, ScanCommand} from "@aws-sdk/client-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { ddbClient } from "./ddbClient"
 
 exports.handler = async function(event) {
@@ -22,6 +22,79 @@ const eventBridgeInvocation = async (event) => {
 }
 
 const apiGatewayInvocation = async(event) => {
+
+  //GET /order
+  //GET /order/{userName}
+  var body
+  try {
+    switch(event.httpMethod) {
+      case "GET":
+        if(event.pathParameters != null) {
+          body = await getOrder(event)
+        }
+        else{
+          body = await getAllOrders(event)
+        }
+        break
+      default:
+        throw new Error(`Unsupported http method {$event.httpMethod}`)
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "Success at apiGatewayInvocation",
+        body: body
+      })
+    }
+  }
+  catch (e) {
+    console.error(e)
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: "Failed in the apiGatewayInvocation",
+        errorMsg: e.message,
+        errorStack: e.stack
+      })
+    }
+  }
+
+}
+
+const getOrder = async(event) => {
+  console.log(`getOrder "${JSON.stringify.event}"`)
+
+  const userName = event.pathParameters.userName
+  const orderDate = event.queryStringParameters.orderDate
+
+  const params = {
+    //To get values from the db using botht he userName and orderDate
+    KeyConditionExpression: "userName = :userName and orderDate = :orderDate",
+      ExpressionAttributeValues: {
+        ":userName": { S: userName },
+        ":orderDate": { S: orderDate }
+      },
+      TableName: process.env.DYNAMO_TABLE_NAME
+    };
+
+  const {Items} = await ddbClient.send(new QueryCommand(params))
+
+  console.log(Items)
+  return Items.map((item) => unmarshall(item))
+
+}
+
+const getAllOrders = async(event) => {
+  console.log(`getAllOrders "${JSON.stringify.event}"`)
+
+  const params = {
+    TableName: process.env.DYNAMO_TABLE_NAME,
+  }
+
+  const {Items} = await ddbClient.send(new ScanCommand(params))
+
+  console.log(Items)
+  return (Items) ? Items.map((item) => unmarshall(item)) : {}
 
 }
 
