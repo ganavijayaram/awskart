@@ -5,7 +5,7 @@ import { ddbClient }  from "./ddbClient";
 import { ebClient } from "./eventBridgeClient";
 
 exports.handler = async function(event) {
-    console.log("request:", JSON.stringify(event, undefined, 2));
+    console.log("BASKET request:", JSON.stringify(event, undefined, 2));
     try {
         //based on the method we perform the operations
         //GET /basket
@@ -62,16 +62,19 @@ exports.handler = async function(event) {
 
 //This is synchronous implementation
 const getBasket = async (userName) => {
-    console.log("getBasket");
+    console.log(`getBasket "${userName}"`);
     try {
         const params = {
           TableName: process.env.DYNAMO_TABLE_NAME,
           Key: marshall({ userName: userName })
         };
+
+        console.log("GETBASKET BEFORE")
      
-        const { Item } = await ddbClient.send(new GetItemCommand(params));
+        const { Item } = await ddbClient.send(new GetItemCommand(params))
     
-        console.log(Item);
+        console.log(`Item is "${JSON.stringify(Item)}"`);
+        console.log("GETBASKET AFTER")
         return (Item) ? unmarshall(Item) : {};
     
       } catch(e) {
@@ -103,7 +106,7 @@ const getAllBasket = async() => {
 
 //This is asynchronous implementation
 const checkoutBasket = async(event) => {
-    console.log(`checkoutBasket "$event"`)
+    console.log(`checkoutBasket "${JSON.stringify(event)}"`)
     //Once we checkout the basket, the event is sent to the Event Bridge and then the order microservice will sue it
     //this uses the concept of pub-sub model
 
@@ -116,7 +119,7 @@ const checkoutBasket = async(event) => {
     }
 
     //get items from the basket for that user
-    const userBasket = getBasket(eventBody.userName)
+    const userBasket = await getBasket(eventBody.userName)
 
     //create even with this items and calculate the totalprice
     const eventPayload = preparePayload(eventBody, userBasket)
@@ -139,20 +142,21 @@ const checkoutBasket = async(event) => {
 }
 
 const preparePayload = (eventBody, userBasket) => {
-    console.log("preparePayload")
+    console.log(`preparePayload eventBody "${JSON.stringify(eventBody)}" userBasket "${JSON.stringify(userBasket)}"`)
     try {
         //Items should be present in the userBasket
         if(userBasket == null || userBasket.items == null) {
-            throw new Error(`Basket has ot contain items "${userBasket}"`)
+            throw new Error(`Basket has no items "${JSON.stringify(userBasket)}"`)
         }
         let totalAmount = 0
-        userBasket.items.array.forEach(item => totalAmount = totalAmount + item.price);
+        console.log(`userBaskets items "${JSON.stringify(userBasket.items)}"`)
+        userBasket.items.forEach(item => totalAmount = totalAmount + item.price);
         eventBody.totalAmount = totalAmount
-        console.log(`eventBody after Amount is "${eventBody}"`)
+        console.log(`eventBody after Amount is "${JSON.stringify(eventBody)}"`)
 
         //Copying items from userBasket to the eventBody
         Object.assign(eventBody, userBasket)
-        console.log(`Successfully prepared the payload "${eventBody}"`)
+        console.log(`Successfully prepared the payload "${JSON.stringify(eventBody)}"`)
         return eventBody
 
     }
@@ -163,7 +167,7 @@ const preparePayload = (eventBody, userBasket) => {
 }
 
 const publishCheckoutBasketEvent = async (eventPayload) => {
-    console.log("publishCheckoutBasketEvent")
+    console.log(`publishCheckoutBasketEvent event Payload "${JSON.stringify(eventPayload)}"`)
 
     try {
         const params = {
@@ -181,7 +185,7 @@ const publishCheckoutBasketEvent = async (eventPayload) => {
         //Publishing event to the Event bridge
         const checkOutResult = await ebClient.send(new PutEventsCommand(params))
 
-        console.log(`Successfully send the event "$"data"`)
+        console.log(`Successfully send the event "${JSON.stringify(checkOutResult)}"`)
         return checkOutResult
 
     }
@@ -193,7 +197,7 @@ const publishCheckoutBasketEvent = async (eventPayload) => {
 
 //This is synchronous implementation
 const createBasket = async(event) => {
-    console.log(`createBasket "$event"`)
+    console.log(`createBasket "${JSON.stringify(event)}"`)
 
     try {
         const requestBody = JSON.parse(event.body)
@@ -207,7 +211,7 @@ const createBasket = async(event) => {
 
         const createBasketResult =  await ddbClient.send(new PutItemCommand(params))
 
-        console.log(createBasketResult)
+        console.log(`Result "$JSON.stringify(createBasketResult)"`)
         return createBasketResult
 
     }
@@ -220,7 +224,7 @@ const createBasket = async(event) => {
 
 //This is synchronous implementation
 const deleteBasket = async(userName) => {
-    console.log(`deleteBasket "${userName}"`)
+    console.log(`deleteBasket "${JSON.stringify(userName)}"`)
 
     try {
         const params = {
