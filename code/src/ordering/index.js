@@ -81,7 +81,6 @@ const getOrder = async(event) => {
 
   console.log(Items)
   return Items.map((item) => unmarshall(item))
-
 }
 
 const getAllOrders = async(event) => {
@@ -92,10 +91,8 @@ const getAllOrders = async(event) => {
   }
 
   const {Items} = await ddbClient.send(new ScanCommand(params))
-
   console.log(Items)
   return (Items) ? Items.map((item) => unmarshall(item)) : {}
-
 }
 
 const createOrder = async(event) => {

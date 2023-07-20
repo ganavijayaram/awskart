@@ -1,11 +1,12 @@
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
-import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
+import { LambdaFunction, SqsQueue } from "aws-cdk-lib/aws-events-targets";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
+import { IQueue } from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 
 interface EcommerceEventbusProps {
-    publisherFunction: IFunction;
-    targetFunction: IFunction
+    publisherFunction: IFunction
+    targetQueue: IQueue
 }
 
 export class EcommerceEventbus extends Construct {
@@ -31,7 +32,7 @@ export class EcommerceEventbus extends Construct {
         })
     
         //Target Definition
-        checkoutBasketRule.addTarget(new LambdaFunction(props.targetFunction))
+        checkoutBasketRule.addTarget(new SqsQueue(props.targetQueue))
 
         //Granting the source to publish events to the event bus else will get AccessDenied
         eventBus.grantPutEventsTo(props.publisherFunction)

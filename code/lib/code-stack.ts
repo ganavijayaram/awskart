@@ -4,6 +4,7 @@ import { EcommerceDatabase } from './database';
 import { EcommerceMicroservices } from './microservice';
 import { EcommerceApiGateway } from './apigateway';
 import { EcommerceEventbus } from './eventbus';
+import { EcommerceQueue } from './queue';
 
 
 export class CodeStack extends cdk.Stack {
@@ -23,9 +24,13 @@ export class CodeStack extends cdk.Stack {
       orderMicroservice: microservices.orderMicroservice
     })
 
+    const queue = new EcommerceQueue(this, "Queue", {
+      consumer: microservices.orderMicroservice
+    })
+
     const eventBus = new EcommerceEventbus(this, 'Eventbus', {
       publisherFunction: microservices.basketMicroservice,
-      targetFunction: microservices.orderMicroservice
+      targetQueue: queue.orderQueue
     })
 
   }
