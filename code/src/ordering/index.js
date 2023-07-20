@@ -6,14 +6,35 @@ exports.handler = async function(event) {
     console.log("ORDERING request: ", JSON.stringify(event, undefined, 2))
     
     const eventType = event['detail-type']
-    if(eventType !== undefined) {
+    //if the event is coming from the SQS
+    if(event.Records != null) {
+      await sqsInvocation(event)
+    }
+    //Event is from the Event Bridge
+    else if(eventType !== undefined) {
       await eventBridgeInvocation(event)
     }
+    //Event is from the API gateway
     else {
       return await apiGatewayInvocation(event)
     }
 
 }
+
+const sqsInvocation = async (event) => {
+  console.log(`sqsInvocation "${JSON.stringify(event)}"`)
+
+  event.Records.forEach(async (record) => {
+    console.log(`Record "${JSON.stringify(record)}"`)
+
+   const recordBody =  JSON.parse(record.body)
+
+   //Creating order from the detail part of the event
+   await createOrder(recordBody.detail)
+    
+  });
+}
+
 
 const eventBridgeInvocation = async (event) => {
 

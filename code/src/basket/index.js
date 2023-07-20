@@ -151,7 +151,7 @@ const preparePayload = (eventBody, userBasket) => {
         let totalAmount = 0
         console.log(`userBaskets items "${JSON.stringify(userBasket.items)}"`)
         userBasket.items.forEach(item => totalAmount = totalAmount + item.price);
-        eventBody.totalAmount = totalAmount
+        eventBody.totalPrice = totalAmount
         console.log(`eventBody after Amount is "${JSON.stringify(eventBody)}"`)
 
         //Copying items from userBasket to the eventBody
